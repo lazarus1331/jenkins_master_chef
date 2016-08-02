@@ -1,0 +1,5 @@
+# test if the java process is listening to port 8080
+describe port(8080) do
+  it { should be_listening }
+  its('processes') {should include 'java'}
+end
