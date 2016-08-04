@@ -7,7 +7,7 @@ provisioner:
 
 platforms:
   - name: ubuntu-16.04
-  - name: ubuntu-14.04
+#  - name: ubuntu-14.04
 
 suites:
   - name: default
@@ -15,7 +15,6 @@ suites:
       - recipe[jenkins_master_chef::default]
     attributes:
     verifier:
-      name: busser
-#      name: inspec
-#      inspec_tests:
-#        - test/integration/default/jenkins_port.rb
+      name: inspec
+      inspec_tests:
+        - test/integration/default/inspec

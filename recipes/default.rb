@@ -7,7 +7,7 @@
 # Install packages
 packages = [
   'build-essential',
-  'openjdk-8-jdk'
+  'default-jdk'
 ]
 
 packages.each do |pkg_id|
@@ -17,29 +17,14 @@ packages.each do |pkg_id|
 end
 
 # Install jenkins
-node.override[:jenkins][:master][:jvm_options] = '-Djenkins.install.runSetupWizard=false'
-node.default[:jenkins][:master][:repository] = 'http://pkg.jenkins-ci.org/debian-stable'
-node.default[:jenkins][:master][:repository_key] = 'http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key'
-node.default[:jenkins][:master][:version] = '2.7.1'
-
 include_recipe 'jenkins::master'
-
-# Get admin password
-admin_pwd = ''
-ruby_block 'get_admin_pwd' do
-  block do
-    if File.exist?('/var/lib/jenkins/secrets/initialAdminPassword')
-      admin_pwd = IO.read('/var/lib/jenkins/secrets/initialAdminPassword')
-    end
-  end
-end
-log 'Admin password is: ' + admin_pwd
 
 # Install plugins
 plugins = [
   'git',
   'github',
   'jira',
+  'hipchat',
   'bitbucket',
   'thinBackup'
 ]
@@ -48,8 +33,28 @@ plugins.each do |plugin_id|
   jenkins_plugin plugin_id
 end
 
-service "jenkins" do
-  action :restart
+# Restart jenkins to pickup new plugins
+jenkins_command 'safe-restart'
+
+# Install nginx
+include_recipe 'nginx::default'
+nginx_site 'default' do
+  enable false
 end
 
+# Add jenkins-nginx.conf
+template '/etc/nginx/sites-available/jenkins-nginx.conf' do
+  source 'jenkins-nginx.conf.erb'
+  mode '0600'
+  owner 'root'
+  group 'root'
+end
+
+execute 'create_symlink' do
+  command 'ln -sf /etc/nginx/sites-available/jenkins-nginx.conf /etc/nginx/sites-enabled/jenkins-nginx.conf'
+  creates '/etc/nginx/sites-enabled/jenkins-nginx.conf'
+  notifies :restart, 'service[nginx]', :immediate
+end
+
+# Tag the instance
 tag('jenkins')
