@@ -4,7 +4,7 @@ maintainer_email 'michael.rollins@github.com'
 license 'all_rights_reserved'
 description 'Installs jenkins with plugins'
 long_description 'Installs jenkins with plugins'
-version '0.1.2'
+version '0.1.3'
 
 depends 'apt'
 depends 'nginx'
